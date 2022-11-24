@@ -110,7 +110,7 @@ char *shell_read_line(void){
             buffer[position] = c;
         }
         position++;
-        if(position > bufsize){
+        if(position >= bufsize){
             bufsize += shell_RL_BUFSIZE;
             buffer = realloc(buffer, bufsize);
             if(!buffer){
@@ -119,4 +119,50 @@ char *shell_read_line(void){
             }
         }
     }
+}
+
+#define shell_TOK_BUFSIZE 64
+#define shell_TOK_DELIM " \t\r\n\a"
+
+char **shell_split_line(char *line){
+    int bufsize = shell_RL_BUFSIZE;
+    int position = 0;
+    char **tokens = malloc(sizeof(*char) * bufsize);
+    char *token;
+
+    if(!tokens){
+        fprintf(stderr, "\n\nshell: %s\n\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    token = strtok(line, shell_TOK_DELIM);
+    while(token != NULL){
+        tokens[position] = token;
+        postion++;
+        if(position >= bufsize){
+            bufsize += shell_RL_BUFSIZE;
+            tokens = realloc(tokens, bufsize * sizeof(char*));
+            if (!tokens) {
+                fprintf(stderr, "\n\nshell: %s\n\n", strerror(errno));
+                exit(EXIT_FAILURE);
+          }
+        }
+        token = strtok(NULL, shell_TOK_DELIM);
+    }
+    tokens[position] = NULL;
+    return tokens;
+}
+
+void shell_loop(void){
+    char *line;
+    char **args;
+    int status;
+    do{
+        printf("> ");
+        line = shell_read_line();
+        args = shell_split_line(line);
+        status = shell_execute(args);
+
+        free(line);
+        free(args);
+    } while(status);
 }
